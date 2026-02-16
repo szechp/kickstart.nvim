@@ -3,6 +3,7 @@ return {
     'saghen/blink.cmp',
     event = 'VimEnter',
     version = '1.*',
+    enabled = not vim.g.vscode,
     dependencies = {
       -- Snippet Engine
       {
@@ -57,7 +58,9 @@ return {
         -- <c-k>: Toggle signature help
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
+        preset = 'enter',
+        ['<C-j>'] = { 'select_next', 'fallback' },
+        ['<C-k>'] = { 'select_prev', 'fallback' },
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
@@ -72,11 +75,49 @@ return {
       completion = {
         -- By default, you may press `<c-space>` to show the documentation.
         -- Optionally, set `auto_show = true` to show the documentation after a delay.
-        documentation = { auto_show = false, auto_show_delay_ms = 500 },
+        accept = {
+          dot_repeat = false,
+        },
+        documentation = { auto_show = true, auto_show_delay_ms = 500 },
+        list = {
+          selection = {
+            preselect = false,
+          },
+        },
+      },
+
+      cmdline = {
+        completion = {
+          list = {
+            selection = { preselect = false },
+          },
+          menu = { auto_show = true },
+        },
+        keymap = {
+          preset = 'default',
+          ['<Right>'] = { 'show', 'accept', 'fallback' },
+          -- ['<down>'] = { 'select_next' }
+          -- ['<CR>'] = { 'accept_and_enter', 'fallback' },
+        },
+        sources = function()
+          local type = vim.fn.getcmdtype()
+          -- Search forward and backward
+          if type == '/' or type == '?' then
+            return {}
+          end
+          -- Commands
+          if type == ':' or type == '@' then
+            return { 'cmdline' }
+          end
+          return {}
+        end,
       },
 
       sources = {
         default = { 'lsp', 'path', 'snippets', 'lazydev', 'buffer' },
+        per_filetype = {
+          codecompanion = { 'codecompanion' },
+        },
         providers = {
           lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
           buffer = {
@@ -92,6 +133,13 @@ return {
               return vim.tbl_contains(enabled_filetypes, filetype)
             end,
           },
+          -- On WSL2, blink.cmp may cause the editor to freeze due to a known limitation.
+          -- To address this issue, uncomment the following configuration:
+          -- cmdline = {
+          --   enabled = function()
+          --     return vim.fn.getcmdtype() ~= ':' or not vim.fn.getcmdline():match "^[%%0-9,'<>%-]*!"
+          --   end,
+          -- },
         },
       },
 

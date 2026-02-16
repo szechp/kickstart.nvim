@@ -4,6 +4,7 @@ return {
     -- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
     -- used for completion, annotations and signatures of Neovim apis
     'folke/lazydev.nvim',
+    enabled = not vim.g.vscode,
     ft = 'lua',
     ---@module 'lazydev'
     ---@type lazydev.Config
@@ -12,6 +13,7 @@ return {
       library = {
         -- Load luvit types when the `vim.uv` word is found
         { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
+        { path = 'snacks.nvim', words = { 'Snacks' } },
       },
     },
   },
@@ -90,16 +92,15 @@ return {
           map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
 
           -- Find references for the word under your cursor.
-          map('grr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
-
+          map('grr', require('snacks').picker.lsp_references, '[G]oto [R]eferences')
           -- Jump to the implementation of the word under your cursor.
           --  Useful when your language has ways of declaring types without an actual implementation.
-          map('gri', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
+          map('gri', require('snacks').picker.lsp_implementations, '[G]oto [I]mplementation')
 
           -- Jump to the definition of the word under your cursor.
           --  This is where a variable was first declared, or where a function is defined, etc.
           --  To jump back, press <C-t>.
-          map('grd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          map('grd', require('snacks').picker.lsp_definitions, '[G]oto [D]efinition')
 
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
@@ -107,16 +108,16 @@ return {
 
           -- Fuzzy find all the symbols in your current document.
           --  Symbols are things like variables, functions, types, etc.
-          map('gO', require('telescope.builtin').lsp_document_symbols, 'Open Document Symbols')
+          map('gO', require('snacks').picker.lsp_symbols, 'Open Document Symbols')
 
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
-          map('gW', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Open Workspace Symbols')
+          map('gW', require('snacks').picker.lsp_workspace_symbols, 'Open Workspace Symbols')
 
           -- Jump to the type of the word under your cursor.
           --  Useful when you're not sure what type a variable is and you want to see
           --  the definition of its *type*, not where it was *defined*.
-          map('grt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
+          map('grt', require('snacks').picker.lsp_type_definitions, '[G]oto [T]ype Definition')
 
           -- Toggle to show/hide diagnostic messages
           map('<leader>td', function() vim.diagnostic.enable(not vim.diagnostic.is_enabled()) end, '[T]oggle [D]iagnostics')
@@ -155,7 +156,7 @@ return {
           --
           -- This may be unwanted, since they displace some of your code
           if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
-            map('<leader>th', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle Inlay [H]ints')
+            map('<leader>th', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, 'Inlay [h]ints')
           end
         end,
       })
@@ -214,6 +215,50 @@ return {
         --
         --  Feel free to add/remove any LSPs here that you want to install via Mason. They will automatically be installed and setup.
         mason = {
+          yamlls = require('schema-companion').setup_client(
+            require('schema-companion').adapters.yamlls.setup {
+              sources = {
+                -- your sources for the language server
+                require('schema-companion').sources.matchers.kubernetes.setup { version = 'master' },
+                require('schema-companion').sources.lsp.setup(),
+                require('schema-companion').sources.schemas.setup {
+                  {
+                    name = 'Kubernetes master',
+                    uri = 'https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/all.json',
+                  },
+                },
+              },
+            },
+            {
+              --- your yaml language server configuration
+            }
+          ),
+          helm_ls = require('schema-companion').setup_client(
+            require('schema-companion').adapters.helmls.setup {
+              sources = {
+                -- your sources for the language server
+                require('schema-companion').sources.matchers.kubernetes.setup { version = 'master' },
+              },
+            },
+            {
+              --- your language server configuration
+            }
+          ),
+
+          jsonls = {
+            require('schema-companion').setup_client(
+              require('schema-companion').adapters.jsonls.setup {
+                sources = {
+                  require('schema-companion').sources.lsp.setup(),
+                  require('schema-companion').sources.none.setup(),
+                },
+              },
+              {
+                --- your language server configuration
+              }
+            ),
+          },
+
           -- clangd = {},
           -- gopls = {},
           -- pyright = {},
@@ -226,6 +271,14 @@ return {
           -- But for many setups, the LSP (`ts_ls`) will work just fine
           -- ts_ls = {},
           --
+          --
+          -- terraformls = {},
+          tofu_ls = {
+            cmd = { 'tofu-ls', 'serve' },
+            -- Base filetypes
+            filetypes = { 'terraform', 'terraform-vars' },
+            root_markers = { '.terraform', '.git' },
+          },
           lua_ls = {
             -- cmd = { ... },
             -- filetypes = { ... },

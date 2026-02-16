@@ -72,25 +72,61 @@ return {
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
-      vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-      vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
-      vim.keymap.set({ 'n', 'v' }, '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
-      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+      vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[h]elp' })
+      vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[k]eymaps' })
+      vim.keymap.set('n', '<leader>.', builtin.find_files, { desc = 'find files in [.]/' })
+      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[s]elect Telescope' })
+      vim.keymap.set({ 'n', 'v' }, '<leader>sw', builtin.grep_string, { desc = 'current [w]ord' })
+      vim.keymap.set('n', '<leader>/', builtin.live_grep, { desc = 'grep (cwd)' })
+      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[d]iagnostics' })
+      vim.keymap.set('n', '<leader>sp', builtin.resume, { desc = 'resume [p]revious picker' })
+      vim.keymap.set('n', '<leader>sr', builtin.oldfiles, { desc = '[r]ecent Files' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[g]rep in Open Files' }) -- You may want to use a custom function for buffers
+      vim.keymap.set('n', '<leader>sN', function() builtin.find_files { cwd = vim.fn.stdpath 'config' } end, { desc = '[N]eovim files' })
+
+      -- Global toggle state for including ignored + hidden files in live_grep
+      _G._telescope_include_ignored = false
+
+      -- Helper to return live_grep options with dynamic additional_args and <C-i> toggle
+      local function get_live_grep_opts()
+        return {
+          additional_args = function()
+            if _G._telescope_include_ignored then
+              return { '--no-ignore', '--hidden' }
+            else
+              return {}
+            end
+          end,
+
+          -- Keybinding inside Telescope prompt to toggle ignored visibility and reopen picker
+          attach_mappings = function(_, map)
+            map({ 'i', 'n' }, '<M-i>', function(prompt_bufnr)
+              _G._telescope_include_ignored = not _G._telescope_include_ignored
+              require('telescope.actions').close(prompt_bufnr)
+              vim.schedule(function() builtin.live_grep(get_live_grep_opts()) end)
+              vim.notify(
+                'Telescope [live_grep]: include ignored = ' .. tostring(_G._telescope_include_ignored),
+                vim.log.levels.INFO,
+                { title = 'Telescope Toggle' }
+              )
+            end)
+            return true
+          end,
+        }
+      end
+
+      -- Keymap to open live_grep with toggle support
+      vim.keymap.set('n', '<leader>/', function() builtin.live_grep(get_live_grep_opts()) end, { desc = 'grep (cwd)' })
 
       -- Slightly advanced example of overriding default behavior and theme
-      vim.keymap.set('n', '<leader>/', function()
+      vim.keymap.set('n', '<leader>sb', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
           winblend = 10,
           previewer = false,
         })
-      end, { desc = '[/] Fuzzily search in current buffer' })
+      end, { desc = '[b]uffer (fuzzily)' })
 
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
