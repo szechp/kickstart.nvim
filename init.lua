@@ -180,32 +180,7 @@ vim.o.wrap = false
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
--- Diagnostic Config & Keymaps
--- See :help vim.diagnostic.Opts
-vim.diagnostic.config {
-  update_in_insert = false,
-  severity_sort = true,
-  float = { border = 'rounded', source = 'if_many' },
-  signs = vim.g.have_nerd_font and {
-    text = {
-      [vim.diagnostic.severity.ERROR] = '󰅚 ',
-      [vim.diagnostic.severity.WARN] = '󰀪 ',
-      [vim.diagnostic.severity.INFO] = '󰋽 ',
-      [vim.diagnostic.severity.HINT] = '󰌶 ',
-    },
-  } or {},
-
-  -- Can switch between these as you prefer
-  virtual_text = {
-    source = 'if_many',
-    spacing = 2,
-  },
-  virtual_lines = false, -- Teest shows up underneath the line, with virtual lines
-
-  -- Auto open the float, so you can easily read the errors when jumping with `[d` and `]d`
-  jump = { float = true },
-}
-
+-- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
@@ -326,18 +301,24 @@ local scooter_term = nil
 
 -- Called by scooter to open the selected file at the correct line from the scooter search list
 _G.EditLineFromScooter = function(file_path, line)
-  if scooter_term and scooter_term:buf_valid() then scooter_term:hide() end
+  if scooter_term and scooter_term:buf_valid() then
+    scooter_term:hide()
+  end
 
   local current_path = vim.fn.expand '%:p'
   local target_path = vim.fn.fnamemodify(file_path, ':p')
 
-  if current_path ~= target_path then vim.cmd.edit(vim.fn.fnameescape(file_path)) end
+  if current_path ~= target_path then
+    vim.cmd.edit(vim.fn.fnameescape(file_path))
+  end
 
   vim.api.nvim_win_set_cursor(0, { line, 0 })
 end
 
 local function is_terminal_running(term)
-  if not term or not term:buf_valid() then return false end
+  if not term or not term:buf_valid() then
+    return false
+  end
   local channel = vim.fn.getbufvar(term.buf, 'terminal_job_id')
   return channel and vim.fn.jobwait({ channel }, 0)[1] == -1
 end
@@ -353,7 +334,9 @@ local function open_scooter()
 end
 
 local function open_scooter_with_text(search_text)
-  if scooter_term and scooter_term:buf_valid() then scooter_term:close() end
+  if scooter_term and scooter_term:buf_valid() then
+    scooter_term:close()
+  end
 
   local escaped_text = vim.fn.shellescape(search_text:gsub('\r?\n', ' '))
   scooter_term = require('snacks').terminal.open('scooter --fixed-strings --search-text ' .. escaped_text, {
@@ -384,7 +367,9 @@ local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
   local out = vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
-  if vim.v.shell_error ~= 0 then error('Error cloning lazy.nvim:\n' .. out) end
+  if vim.v.shell_error ~= 0 then
+    error('Error cloning lazy.nvim:\n' .. out)
+  end
 end
 
 ---@type vim.Option
@@ -432,21 +417,21 @@ require('lazy').setup({
   -- options to `gitsigns.nvim`.
   --
   -- See `:help gitsigns` to understand what the configuration keys do
-  { -- Adds git related signs to the gutter, as well as utilities for managing changes
-    'lewis6991/gitsigns.nvim',
-    ---@module 'gitsigns'
-    ---@type Gitsigns.Config
-    ---@diagnostic disable-next-line: missing-fields
-    opts = {
-      signs = {
-        add = { text = '+' }, ---@diagnostic disable-line: missing-fields
-        change = { text = '~' }, ---@diagnostic disable-line: missing-fields
-        delete = { text = '_' }, ---@diagnostic disable-line: missing-fields
-        topdelete = { text = '‾' }, ---@diagnostic disable-line: missing-fields
-        changedelete = { text = '~' }, ---@diagnostic disable-line: missing-fields
-      },
-    },
-  },
+  -- { -- Adds git related signs to the gutter, as well as utilities for managing changes
+  --   'lewis6991/gitsigns.nvim',
+  --   ---@module 'gitsigns'
+  --   ---@type Gitsigns.Config
+  --   ---@diagnostic disable-next-line: missing-fields
+  --   opts = {
+  --     signs = {
+  --       add = { text = '+' }, ---@diagnostic disable-line: missing-fields
+  --       change = { text = '~' }, ---@diagnostic disable-line: missing-fields
+  --       delete = { text = '_' }, ---@diagnostic disable-line: missing-fields
+  --       topdelete = { text = '‾' }, ---@diagnostic disable-line: missing-fields
+  --       changedelete = { text = '~' }, ---@diagnostic disable-line: missing-fields
+  --     },
+  --   },
+  -- },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
@@ -587,7 +572,9 @@ require('lazy').setup({
         -- },
         -- pickers = {}
         extensions = {
-          ['ui-select'] = { require('telescope.themes').get_dropdown() },
+          ['ui-select'] = {
+            require('telescope.themes').get_dropdown(),
+          },
         },
       }
 
@@ -606,44 +593,9 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-      vim.keymap.set('n', '<leader>sc', builtin.commands, { desc = '[S]earch [C]ommands' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
-      -- This runs on LSP attach per buffer (see main LSP attach function in 'neovim/nvim-lspconfig' config for more info,
-      -- it is better explained there). This allows easily switching between pickers if you prefer using something else!
-      vim.api.nvim_create_autocmd('LspAttach', {
-        group = vim.api.nvim_create_augroup('telescope-lsp-attach', { clear = true }),
-        callback = function(event)
-          local buf = event.buf
-
-          -- Find references for the word under your cursor.
-          vim.keymap.set('n', 'grr', builtin.lsp_references, { buffer = buf, desc = '[G]oto [R]eferences' })
-
-          -- Jump to the implementation of the word under your cursor.
-          -- Useful when your language has ways of declaring types without an actual implementation.
-          vim.keymap.set('n', 'gri', builtin.lsp_implementations, { buffer = buf, desc = '[G]oto [I]mplementation' })
-
-          -- Jump to the definition of the word under your cursor.
-          -- This is where a variable was first declared, or where a function is defined, etc.
-          -- To jump back, press <C-t>.
-          vim.keymap.set('n', 'grd', builtin.lsp_definitions, { buffer = buf, desc = '[G]oto [D]efinition' })
-
-          -- Fuzzy find all the symbols in your current document.
-          -- Symbols are things like variables, functions, types, etc.
-          vim.keymap.set('n', 'gO', builtin.lsp_document_symbols, { buffer = buf, desc = 'Open Document Symbols' })
-
-          -- Fuzzy find all the symbols in your current workspace.
-          -- Similar to document symbols, except searches over your entire project.
-          vim.keymap.set('n', 'gW', builtin.lsp_dynamic_workspace_symbols, { buffer = buf, desc = 'Open Workspace Symbols' })
-
-          -- Jump to the type of the word under your cursor.
-          -- Useful when you're not sure what type a variable is and you want to see
-          -- the definition of its *type*, not where it was *defined*.
-          vim.keymap.set('n', 'grt', builtin.lsp_type_definitions, { buffer = buf, desc = '[G]oto [T]ype Definition' })
-        end,
-      })
-
-      -- Override default behavior and theme when searching
+      -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
@@ -861,67 +813,67 @@ require('lazy').setup({
         --
         --  Feel free to add/remove any LSPs here that you want to install via Mason. They will automatically be installed and setup.
         mason = {
-        -- clangd = {},
-        -- gopls = {},
-        -- pyright = {},
-        -- rust_analyzer = {},
-        --
-        -- Some languages (like typescript) have entire language plugins that can be useful:
-        --    https://github.com/pmizio/typescript-tools.nvim
-        --
-        -- But for many setups, the LSP (`ts_ls`) will work just fine
-        -- ts_ls = {},
-        yamlls = require('schema-companion').setup_client(
-          require('schema-companion').adapters.yamlls.setup {
-            sources = {
-              -- your sources for the language server
-              require('schema-companion').sources.matchers.kubernetes.setup { version = 'master' },
-              require('schema-companion').sources.lsp.setup(),
-              require('schema-companion').sources.schemas.setup {
-                {
-                  name = 'Kubernetes master',
-                  uri = 'https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/all.json',
+          -- clangd = {},
+          -- gopls = {},
+          -- pyright = {},
+          -- rust_analyzer = {},
+          --
+          -- Some languages (like typescript) have entire language plugins that can be useful:
+          --    https://github.com/pmizio/typescript-tools.nvim
+          --
+          -- But for many setups, the LSP (`ts_ls`) will work just fine
+          -- ts_ls = {},
+          yamlls = require('schema-companion').setup_client(
+            require('schema-companion').adapters.yamlls.setup {
+              sources = {
+                -- your sources for the language server
+                require('schema-companion').sources.matchers.kubernetes.setup { version = 'master' },
+                require('schema-companion').sources.lsp.setup(),
+                require('schema-companion').sources.schemas.setup {
+                  {
+                    name = 'Kubernetes master',
+                    uri = 'https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/all.json',
+                  },
                 },
               },
             },
-          },
-          {
-            --- your yaml language server configuration
-          }
-        ),
-        helm_ls = require('schema-companion').setup_client(
-          require('schema-companion').adapters.helmls.setup {
-            sources = {
-              -- your sources for the language server
-              require('schema-companion').sources.matchers.kubernetes.setup { version = 'master' },
-            },
-          },
-          {
-            --- your language server configuration
-          }
-        ),
-
-        jsonls = {
-          require('schema-companion').setup_client(
-            require('schema-companion').adapters.jsonls.setup {
+            {
+              --- your yaml language server configuration
+            }
+          ),
+          helm_ls = require('schema-companion').setup_client(
+            require('schema-companion').adapters.helmls.setup {
               sources = {
-                require('schema-companion').sources.lsp.setup(),
-                require('schema-companion').sources.none.setup(),
+                -- your sources for the language server
+                require('schema-companion').sources.matchers.kubernetes.setup { version = 'master' },
               },
             },
             {
               --- your language server configuration
             }
           ),
-        },
 
-        -- terraformls = {},
-        tofu_ls = {
-          cmd = { 'tofu-ls', 'serve' },
-          -- Base filetypes
-          filetypes = { 'terraform', 'terraform-vars' },
-          root_markers = { '.terraform', '.git' },
-        },
+          jsonls = {
+            require('schema-companion').setup_client(
+              require('schema-companion').adapters.jsonls.setup {
+                sources = {
+                  require('schema-companion').sources.lsp.setup(),
+                  require('schema-companion').sources.none.setup(),
+                },
+              },
+              {
+                --- your language server configuration
+              }
+            ),
+          },
+
+          -- terraformls = {},
+          tofu_ls = {
+            cmd = { 'tofu-ls', 'serve' },
+            -- Base filetypes
+            filetypes = { 'terraform', 'terraform-vars' },
+            root_markers = { '.terraform', '.git' },
+          },
           lua_ls = {
             -- cmd = { ... },
             -- filetypes = { ... },
@@ -1044,7 +996,9 @@ require('lazy').setup({
           -- Build Step is needed for regex support in snippets.
           -- This step is not supported in many windows environments.
           -- Remove the below condition to re-enable on windows.
-          if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then return end
+          if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then
+            return
+          end
           return 'make install_jsregexp'
         end)(),
         dependencies = {
@@ -1060,6 +1014,7 @@ require('lazy').setup({
         },
         opts = {},
       },
+      'folke/lazydev.nvim',
     },
     ---@module 'blink.cmp'
     ---@type blink.cmp.Config
@@ -1130,9 +1085,13 @@ require('lazy').setup({
         sources = function()
           local type = vim.fn.getcmdtype()
           -- Search forward and backward
-          if type == '/' or type == '?' then return {} end
+          if type == '/' or type == '?' then
+            return {}
+          end
           -- Commands
-          if type == ':' or type == '@' then return { 'cmdline' } end
+          if type == ':' or type == '@' then
+            return { 'cmdline' }
+          end
           return {}
         end,
       },
@@ -1316,7 +1275,6 @@ require('lazy').setup({
       --  Check out: https://github.com/nvim-mini/mini.nvim
     end,
   },
-
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
