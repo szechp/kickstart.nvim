@@ -141,6 +141,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   callback = function() vim.hl.on_yank { timeout = 200 } end,
 })
 
+-- [[ my custom stuff ]]
 -- Restore cursor position on file open
 vim.api.nvim_create_autocmd('BufReadPost', {
   desc = 'Restore cursor position on file open',
@@ -166,8 +167,6 @@ vim.api.nvim_create_autocmd('BufWritePre', {
     end
   end,
 })
-
--- [[ my custom stuff ]]
 
 vim.api.nvim_set_keymap('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Select all' })
 
