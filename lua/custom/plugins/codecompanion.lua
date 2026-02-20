@@ -134,6 +134,10 @@ return {
           chat = {
             window = {
               -- layout = 'buffer',
+              opts = {
+                wrap = true,
+                linebreak = true,
+              },
             },
             action_palette = {},
           },

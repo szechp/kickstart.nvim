@@ -300,7 +300,7 @@ rtp:prepend(lazypath)
 --    :Lazy update
 --
 -- NOTE: Here is where you install your plugins.
-require('lazy').setup({
+require('lazy').setup {
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   { 'NMAC427/guess-indent.nvim', opts = {} }, -- Detect tabstop and shiftwidth automatically
 
@@ -1061,33 +1061,59 @@ require('lazy').setup({
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    branch = 'main',
     lazy = false, -- Cannot be lazy-loaded on main branch
     build = ':TSUpdate',
     config = function()
-      -- Install core parsers on startup
-      local core_parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
-      for _, parser in ipairs(core_parsers) do
-        vim.cmd('TSInstall! ' .. parser)
+      ---@param buf integer
+      ---@param language string
+      local function treesitter_try_attach(buf, language)
+        -- check if parser exists and load it
+        if not vim.treesitter.language.add(language) then
+          return
+        end
+
+        -- enables syntax highlighting and other treesitter features
+        vim.treesitter.start(buf, language)
+
+        -- enables treesitter based folds
+        -- for more info on folds see `:help folds`
+        -- vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+
+        -- enables treesitter based indentation
+        vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
       end
-      
-      -- Auto-install parser for any filetype if missing
+
+      -- Filetypes to ignore (plugin UIs, etc.)
+      local ignored_fts = { 'noice', 'lazy', 'mason', 'help', 'checkhealth', 'lspinfo', 'notify', 'blink-cmp-menu', '' }
+
       vim.api.nvim_create_autocmd('FileType', {
-        callback = function()
-          local ft = vim.bo.filetype
-          if ft and ft ~= '' then
-            pcall(vim.cmd, 'TSInstall! ' .. ft)
+        callback = function(args)
+          local buf, filetype = args.buf, args.match
+
+          -- Skip ignored filetypes
+          if vim.tbl_contains(ignored_fts, filetype) then
+            return
+          end
+
+          local language = vim.treesitter.language.get_lang(filetype)
+          if not language then
+            return
+          end
+
+          local installed_parsers = require('nvim-treesitter').get_installed()
+
+          if vim.tbl_contains(installed_parsers, language) then
+            treesitter_try_attach(buf, language)
+          else
+            -- Try to install the parser if not already installed
+            require('nvim-treesitter.install').install(language):await(function() treesitter_try_attach(buf, language) end)
           end
         end,
       })
-      
-      -- Enable treesitter highlighting for all filetypes
-      vim.api.nvim_create_autocmd('FileType', {
-        pattern = '*',
-        callback = function()
-          local buf = vim.api.nvim_get_current_buf()
-          pcall(vim.treesitter.start, buf)
-        end,
-      })
+
+      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+      require('nvim-treesitter.install').install(parsers)
     end,
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
@@ -1123,8 +1149,7 @@ require('lazy').setup({
   -- Or use telescope!
   -- In normal mode type `<space>sh` then write `lazy.nvim-plugin`
   -- you can continue same window with `<space>sr` which resumes last telescope search
-})
+}
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
-
