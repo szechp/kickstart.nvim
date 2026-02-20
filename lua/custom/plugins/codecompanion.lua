@@ -27,12 +27,12 @@ return {
       'nvim-treesitter/nvim-treesitter',
       -- 'github/copilot.vim',
       'ravitemer/codecompanion-history.nvim',
-      {
-        'Davidyz/VectorCode',
-        version = '*', -- optional, depending on whether you're on nightly or release
-        build = 'uv tool install vectorcode', -- optional but recommended. This keeps your CLI up-to-date.
-        dependencies = { 'nvim-lua/plenary.nvim' },
-      },
+      -- {
+      --   'Davidyz/VectorCode',
+      --   version = '*', -- optional, depending on whether you're on nightly or release
+      --   build = 'uv tool install vectorcode', -- optional but recommended. This keeps your CLI up-to-date.
+      --   dependencies = { 'nvim-lua/plenary.nvim' },
+      -- },
       {
         'MeanderingProgrammer/render-markdown.nvim',
         ft = { 'markdown', 'codecompanion' },
@@ -58,12 +58,18 @@ return {
           log_level = 'DEBUG',
         },
         adapters = {
+          ollama = function()
+            return require('codecompanion.adapters').use('ollama')
+          end,
           acp = {
             claude_code = function()
               return require('codecompanion.adapters').extend('claude_code', {
                 env = {
                   CLAUDE_CODE_OAUTH_TOKEN = 'cmd:cat ~/.anthropic_token',
                   KUBECONFIG = vim.fn.expand('~/.kube/staging-kubeconf'),
+                },
+                opts = {
+                  verbose_output = true,
                 },
               })
             end,
@@ -140,11 +146,11 @@ return {
           },
         },
         extensions = {
-          vectorcode = {
-            opts = {
-              add_tool = true,
-            },
-          },
+          -- vectorcode = {
+          --   opts = {
+          --     add_tool = true,
+          --   },
+          -- },
           history = {
             enabled = true,
             opts = {
@@ -163,7 +169,11 @@ return {
                 delete = { n = 'd', i = '<M-d>' },
                 duplicate = { n = '<C-y>', i = '<C-y>' },
               },
-              auto_generate_title = true,
+              auto_generate_title = false,
+              -- title_generation_opts = {
+              --   adapter = 'ollama',
+              --   model = 'qwen3-coder:latest',
+              -- },
               ---Directory path to save the chats
               dir_to_save = vim.fn.stdpath 'data' .. '/codecompanion-history',
             },
