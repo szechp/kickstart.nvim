@@ -1085,7 +1085,22 @@ require('lazy').setup {
       end
 
       -- Filetypes to ignore (plugin UIs, etc.)
-      local ignored_fts = { 'noice', 'lazy', 'mason', 'help', 'checkhealth', 'lspinfo', 'notify', 'blink-cmp-menu', '' }
+      local ignored_fts = {
+        'blink-cmp-menu',
+        'checkhealth',
+        'help',
+        'lazy',
+        'lspinfo',
+        'mason',
+        'nacks_picker_input',
+        'noice',
+        'notify',
+        'snacks_layout_box',
+        'snacks_picker_list',
+        'snacks_terminal',
+        'snacks_win_backdrop',
+        '',
+      }
 
       vim.api.nvim_create_autocmd('FileType', {
         callback = function(args)
