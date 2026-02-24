@@ -168,23 +168,23 @@ vim.api.nvim_create_autocmd('BufWritePre', {
   end,
 })
 
-vim.api.nvim_set_keymap('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Select all' })
+vim.keymap.set('n', '<C-a>', 'ggVG', { desc = 'Select all' })
 
-vim.api.nvim_set_keymap('x', '<S-Up>', 'k', { noremap = true, silent = true, desc = 'Extend visual selection up' })
-vim.api.nvim_set_keymap('x', '<S-Down>', 'j', { noremap = true, silent = true, desc = 'Extend visual selection down' })
-vim.api.nvim_set_keymap('n', '<S-Up>', '<Esc>Vk', { noremap = true, silent = true, desc = 'Start visual selection and move up' })
-vim.api.nvim_set_keymap('n', '<S-Down>', '<Esc>Vj', { noremap = true, silent = true, desc = 'Start visual selection and move down' })
-vim.api.nvim_set_keymap('n', '<S-Left>', 'v', { noremap = true, silent = true, desc = 'Enter visual mode and select left' })
-vim.api.nvim_set_keymap('n', '<S-Right>', 'v', { noremap = true, silent = true, desc = 'Enter visual mode and select right' })
+vim.keymap.set('x', '<S-Up>', 'k', { desc = 'Extend visual selection up' })
+vim.keymap.set('x', '<S-Down>', 'j', { desc = 'Extend visual selection down' })
+vim.keymap.set('n', '<S-Up>', '<Esc>Vk', { desc = 'Start visual selection and move up' })
+vim.keymap.set('n', '<S-Down>', '<Esc>Vj', { desc = 'Start visual selection and move down' })
+vim.keymap.set('n', '<S-Left>', 'v', { desc = 'Enter visual mode and select left' })
+vim.keymap.set('n', '<S-Right>', 'v', { desc = 'Enter visual mode and select right' })
 
-vim.api.nvim_set_keymap('i', '<C-A>', '<HOME>', { noremap = true, silent = true, desc = 'Jump to first char in line' })
-vim.api.nvim_set_keymap('i', '<C-E>', '<END>', { noremap = true, silent = true, desc = 'Jump to last char in line' })
+vim.keymap.set('i', '<C-A>', '<HOME>', { desc = 'Jump to first char in line' })
+vim.keymap.set('i', '<C-E>', '<END>', { desc = 'Jump to last char in line' })
 
-vim.api.nvim_set_keymap('n', '<C-Left>', '<C-w>h', { noremap = true, silent = true, desc = 'Move to left split' })
-vim.api.nvim_set_keymap('n', '<C-Right>', '<C-w>l', { noremap = true, silent = true, desc = 'Move to right split' })
+vim.keymap.set('n', '<C-Left>', '<C-w>h', { desc = 'Move to left split' })
+vim.keymap.set('n', '<C-Right>', '<C-w>l', { desc = 'Move to right split' })
 
-vim.api.nvim_set_keymap('n', 'dx', '<Cmd>normal "_dd<CR>', { noremap = true, silent = true, desc = 'Delete line without yanking' })
-vim.api.nvim_set_keymap('v', 'x', '"_d', { noremap = true, silent = true, desc = 'Delete selection without yanking' })
+vim.keymap.set('n', 'dx', '<Cmd>normal "_dd<CR>', { desc = 'Delete line without yanking' })
+vim.keymap.set('v', 'x', '"_d', { desc = 'Delete selection without yanking' })
 
 -- close neotree when opening debug
 -- vim.keymap.set('n', "<leader>du", function() vim.cmd.Neotree('toggle') require("dapui").toggle({ }) end)
@@ -1045,12 +1045,10 @@ require('lazy').setup {
       require('mini.bufremove').setup()
 
       require('mini.move').setup {
-        {
-          -- Options which control moving behavior
-          options = {
-            -- Automatically reindent selection during linewise vertical move
-            reindent_linewise = true,
-          },
+        -- Options which control moving behavior
+        options = {
+          -- Automatically reindent selection during linewise vertical move
+          reindent_linewise = true,
         },
       }
 

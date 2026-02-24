@@ -25,7 +25,7 @@ return {
     dependencies = {
       'nvim-lua/plenary.nvim',
       'nvim-treesitter/nvim-treesitter',
-      -- 'github/copilot.vim',
+      'github/copilot.vim',
       'ravitemer/codecompanion-history.nvim',
       -- {
       --   'Davidyz/VectorCode',
@@ -55,21 +55,31 @@ return {
     config = function()
       require('codecompanion').setup {
         opts = {
-          log_level = 'DEBUG',
+          log_level = 'ERROR',
         },
         adapters = {
           ollama = function()
             return require('codecompanion.adapters').use('ollama')
           end,
+          copilot = function()
+            return require('codecompanion.adapters').extend('copilot', {})
+          end,
           acp = {
-            claude_code = function()
+            copilot_acp = function()
               return require('codecompanion.adapters').extend('claude_code', {
-                env = {
-                  CLAUDE_CODE_OAUTH_TOKEN = 'cmd:cat ~/.anthropic_token',
-                  KUBECONFIG = vim.fn.expand('~/.kube/staging-kubeconf'),
+                name = 'copilot_acp',
+                formatted_name = 'Copilot ACP',
+                commands = {
+                  default = { 'copilot', '--acp', '--silent' },
                 },
-                opts = {
-                  verbose_output = true,
+                env = {},
+                handlers = {
+                  setup = function(self)
+                    return true
+                  end,
+                  auth = function(self)
+                    return true
+                  end,
                 },
               })
             end,
@@ -109,25 +119,13 @@ return {
                 },
               },
             },
-            adapter = 'claude_code',
-            -- opts = {
-            --   model = 'qwen3-coder', -- or whatever model you want, e.g. 'codellama:7b-instruct'
-            --   url = 'http://localhost:11434', -- optional, default is this
-            -- },
+            adapter = 'copilot_acp',
           },
           inline = {
-            adapter = 'claude_code',
-            -- opts = {
-            --   model = 'qwen3-coder', -- or whatever model you want, e.g. 'codellama:7b-instruct'
-            --   url = 'http://localhost:11434', -- optional, default is this
-            -- },
+            adapter = 'copilot',
           },
           cmd = {
-            adapter = 'claude_code',
-            -- opts = {
-            --   model = 'qwen3-coder', -- or whatever model you want, e.g. 'codellama:7b-instruct'
-            --   url = 'http://localhost:11434', -- optional, default is this
-            -- },
+            adapter = 'copilot',
           },
         },
         display = {

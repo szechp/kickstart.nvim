@@ -1,3 +1,9 @@
+local function open_explorer()
+  local pickers = Snacks.picker.get { source = 'explorer' }
+  for _, v in pairs(pickers) do v:focus() end
+  if #pickers == 0 then Snacks.picker.explorer() end
+end
+
 return {
   'folke/snacks.nvim',
   version = '*',
@@ -117,24 +123,12 @@ return {
     { '<leader>gg', function() Snacks.lazygit() end, desc = 'lazy[g]it' },
     {
       '<D-S-e>',
-      function()
-        local explorer_pickers = Snacks.picker.get { source = 'explorer' }
-        for _, v in pairs(explorer_pickers) do
-          v:focus()
-        end
-        if #explorer_pickers == 0 then Snacks.picker.explorer() end
-      end,
+      open_explorer,
       desc = 'Open Snacks Explorer with Cmd+Shift+E',
     },
     {
       '<leader>o',
-      function()
-        local explorer_pickers = Snacks.picker.get { source = 'explorer' }
-        for _, v in pairs(explorer_pickers) do
-          v:focus()
-        end
-        if #explorer_pickers == 0 then Snacks.picker.explorer() end
-      end,
+      open_explorer,
       desc = '[o]pen explorer',
     },
     { mode = { 'n' }, '<c-`>', function() Snacks.terminal() end, { desc = 'Terminal (cwd)' } },
