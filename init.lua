@@ -183,6 +183,15 @@ vim.keymap.set('i', '<C-E>', '<END>', { desc = 'Jump to last char in line' })
 vim.keymap.set('n', '<C-Left>', '<C-w>h', { desc = 'Move to left split' })
 vim.keymap.set('n', '<C-Right>', '<C-w>l', { desc = 'Move to right split' })
 
+vim.keymap.set('i', '<M-Left>', '<C-o>b', { desc = 'Jump word left in insert mode' })
+vim.keymap.set('i', '<M-Right>', function()
+  local suggestion = vim.fn['copilot#GetDisplayedSuggestion']()
+  if suggestion.text ~= '' then
+    return vim.api.nvim_replace_termcodes('<Plug>(copilot-accept-word)', true, true, true)
+  end
+  return vim.api.nvim_replace_termcodes('<C-o>w', true, true, true)
+end, { expr = true, desc = 'Copilot accept word or jump word right' })
+
 vim.keymap.set('n', 'dx', '<Cmd>normal "_dd<CR>', { desc = 'Delete line without yanking' })
 vim.keymap.set('v', 'x', '"_d', { desc = 'Delete selection without yanking' })
 
@@ -700,6 +709,7 @@ require('lazy').setup {
         -- Structure is identical to the mason table from above.
         others = {
           -- dartls = {},
+          copilot = {},
         },
       }
 
