@@ -185,12 +185,13 @@ vim.keymap.set('n', '<C-Right>', '<C-w>l', { desc = 'Move to right split' })
 
 vim.keymap.set('i', '<M-Left>', '<C-o>b', { desc = 'Jump word left in insert mode' })
 vim.keymap.set('i', '<M-Right>', function()
-  local suggestion = vim.fn['copilot#GetDisplayedSuggestion']()
-  if suggestion.text ~= '' then
-    return vim.api.nvim_replace_termcodes('<Plug>(copilot-accept-word)', true, true, true)
+  local ok, suggestion = pcall(vim.fn['copilot#GetDisplayedSuggestion'])
+  if ok and suggestion and suggestion.text and suggestion.text ~= '' then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Plug>(copilot-accept-word)', true, true, true), 'm', false)
+  else
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<S-Right>', true, true, true), 'n', false)
   end
-  return vim.api.nvim_replace_termcodes('<C-o>w', true, true, true)
-end, { expr = true, desc = 'Copilot accept word or jump word right' })
+end, { desc = 'Copilot accept word or jump word right' })
 
 vim.keymap.set('n', 'dx', '<Cmd>normal "_dd<CR>', { desc = 'Delete line without yanking' })
 vim.keymap.set('v', 'x', '"_d', { desc = 'Delete selection without yanking' })
