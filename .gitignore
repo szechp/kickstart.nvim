@@ -10,3 +10,6 @@ spell/
 lazy-lock.json
 
 .DS_Store
+
+# yaml-schema-router binary (managed by update-yaml-schema-router.sh)
+yaml-schema-router
