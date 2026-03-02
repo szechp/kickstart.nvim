@@ -94,7 +94,27 @@ vim.o.wrap = false
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
--- Diagnostic keymaps
+-- Diagnostic Config & Keymaps
+-- See :help vim.diagnostic.Opts
+vim.diagnostic.config {
+  update_in_insert = false,
+  severity_sort = true,
+  float = { border = 'rounded', source = 'if_many' },
+  underline = { severity = { min = vim.diagnostic.severity.WARN } },
+  signs = vim.g.have_nerd_font and {
+    text = {
+      [vim.diagnostic.severity.ERROR] = '󰅚 ',
+      [vim.diagnostic.severity.WARN] = '󰀪 ',
+      [vim.diagnostic.severity.INFO] = '󰋽 ',
+      [vim.diagnostic.severity.HINT] = '󰌶 ',
+    },
+  } or {},
+  virtual_text = true,
+  virtual_lines = false,
+  jump = { float = true },
+}
+
+
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
@@ -310,7 +330,7 @@ rtp:prepend(lazypath)
 --    :Lazy update
 --
 -- NOTE: Here is where you install your plugins.
-require('lazy').setup {
+require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   { 'NMAC427/guess-indent.nvim', opts = {} }, -- Detect tabstop and shiftwidth automatically
 
@@ -372,7 +392,7 @@ require('lazy').setup {
 
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
+    event = 'VimEnter',
     ---@module 'which-key'
     ---@type wk.Opts
     ---@diagnostic disable-next-line: missing-fields
@@ -470,6 +490,7 @@ require('lazy').setup {
         ---@diagnostic disable-next-line: missing-fields
         opts = {},
       },
+      -- Maps LSP server names between nvim-lspconfig and Mason package names.
       'mason-org/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
@@ -576,50 +597,10 @@ require('lazy').setup {
         end,
       })
 
-      -- Diagnostic Config
-      -- See :help vim.diagnostic.Opts
-      vim.diagnostic.config {
-        severity_sort = true,
-        float = { border = 'rounded', source = 'if_many' },
-        signs = vim.g.have_nerd_font and {
-          text = {
-            [vim.diagnostic.severity.ERROR] = '󰅚 ',
-            [vim.diagnostic.severity.WARN] = '󰀪 ',
-            [vim.diagnostic.severity.INFO] = '󰋽 ',
-            [vim.diagnostic.severity.HINT] = '󰌶 ',
-          },
-        } or {},
-        virtual_text = {
-          source = 'if_many',
-          spacing = 2,
-        },
-        -- Display multiline diagnostics as virtual lines
-        -- virtual_lines = true,
-      }
-
-      -- LSP servers and clients are able to communicate to each other what features they support.
-      --  By default, Neovim doesn't support everything that is in the LSP specification.
-      --  When you add blink.cmp, luasnip, etc. Neovim now has *more* capabilities.
-      --  So, we create new capabilities with blink.cmp, and then broadcast that to the servers.
-      -- NOTE: The following line is now commented as blink.cmp extends capabilites by default from its internal code:
-      -- https://github.com/Saghen/blink.cmp/blob/102db2f5996a46818661845cf283484870b60450/plugin/blink-cmp.lua
-      -- It has been left here as a comment for educational purposes (as the predecessor completion plugin required this explicit step).
-      --
-      -- local capabilities = require("blink.cmp").get_lsp_capabilities()
-
-      -- Language servers can broadly be installed in the following ways:
-      --  1) via the mason package manager; or
-      --  2) via your system's package manager; or
-      --  3) via a release binary from a language server's repo that's accessible somewhere on your system.
-
-      -- The servers table comprises of the following sub-tables:
-      -- 1. mason
-      -- 2. others
-      -- Both these tables have an identical structure of language server names as keys and
-      -- a table of language server configuration as values.
-      ---@class LspServersConfig
-      ---@field mason table<string, vim.lsp.Config>
-      ---@field others table<string, vim.lsp.Config>
+      -- Enable the following language servers
+      --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
+      --  See `:help lsp-config` for information about keys and how to configure
+      ---@type table<string, vim.lsp.Config>
       local servers = {
         --  Add any additional override configuration in any of the following tables. Available keys are:
         --  - cmd (table): Override the default command used to start the server
@@ -628,59 +609,66 @@ require('lazy').setup {
         --  - settings (table): Override the default settings passed when initializing the server.
         --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
         --
-        --  Feel free to add/remove any LSPs here that you want to install via Mason. They will automatically be installed and setup.
-        mason = {
-          -- clangd = {},
-          -- gopls = {},
-          -- pyright = {},
-          -- rust_analyzer = {},
-          --
-          -- Some languages (like typescript) have entire language plugins that can be useful:
-          --    https://github.com/pmizio/typescript-tools.nvim
-          --
-          -- But for many setups, the LSP (`ts_ls`) will work just fine
-          -- ts_ls = {},
-          yamlls = {
-            cmd = { vim.fn.stdpath 'config' .. '/yaml-schema-router', '--lsp-path', 'yaml-language-server' },
-          },
-          helm_ls = {
-            settings = {
-              ['helm-ls'] = {
-                yamlls = {
-                  path = vim.fn.stdpath 'config' .. '/yaml-schema-router',
-                },
-              },
-            },
-          },
-          jsonls = {},
+        -- clangd = {},
+        -- gopls = {},
+        -- pyright = {},
+        -- rust_analyzer = {},
+        -- ts_ls = {},
 
-          -- terraformls = {},
-          tofu_ls = {
-            cmd = { 'tofu-ls', 'serve' },
-            -- Base filetypes
-            filetypes = { 'terraform', 'terraform-vars' },
-            root_markers = { '.terraform', '.git' },
-          },
-          lua_ls = {
-            -- cmd = { ... },
-            -- filetypes = { ... },
-            -- capabilities = {},
-            settings = {
-              Lua = {
-                completion = {
-                  callSnippet = 'Replace',
-                },
-                -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-                -- diagnostics = { disable = { 'missing-fields' } },
+        yamlls = {
+          cmd = { vim.fn.stdpath 'config' .. '/yaml-schema-router', '--lsp-path', 'yaml-language-server' },
+        },
+        helm_ls = {
+          settings = {
+            ['helm-ls'] = {
+              yamlls = {
+                path = vim.fn.stdpath 'config' .. '/yaml-schema-router',
               },
             },
           },
         },
-        -- This table contains config for all language servers that are *not* installed via Mason.
-        -- Structure is identical to the mason table from above.
-        others = {
-          -- dartls = {},
-          copilot = {},
+        jsonls = {},
+
+        -- terraformls = {},
+        tofu_ls = {
+          cmd = { 'tofu-ls', 'serve' },
+          filetypes = { 'terraform', 'terraform-vars' },
+          root_markers = { '.terraform', '.git' },
+        },
+
+        copilot = {},
+
+        stylua = {}, -- Used to format Lua code
+
+        -- Special Lua Config, as recommended by neovim help docs
+        lua_ls = {
+          on_init = function(client)
+            if client.workspace_folders then
+              local path = client.workspace_folders[1].name
+              if path ~= vim.fn.stdpath 'config' and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc')) then return end
+            end
+
+            client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
+              runtime = {
+                version = 'LuaJIT',
+                path = { 'lua/?.lua', 'lua/?/init.lua' },
+              },
+              workspace = {
+                checkThirdParty = false,
+                library = vim.tbl_extend('force', vim.api.nvim_get_runtime_file('', true), {
+                  '${3rd}/luv/library',
+                  '${3rd}/busted/library',
+                }),
+              },
+            })
+          end,
+          settings = {
+            Lua = {
+              completion = {
+                callSnippet = 'Replace',
+              },
+            },
+          },
         },
       }
 
@@ -697,30 +685,15 @@ require('lazy').setup {
       --
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
-      local ensure_installed = vim.tbl_keys(servers.mason or {})
+      local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
-        'stylua', -- Used to format Lua code
+        -- You can add other tools here that you want Mason to install
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-      -- Either merge all additional server configs from the `servers.mason` and `servers.others` tables
-      -- to the default language server configs as provided by nvim-lspconfig or
-      -- define a custom server config that's unavailable on nvim-lspconfig.
-      for server, config in pairs(vim.tbl_extend('keep', servers.mason, servers.others)) do
-        if not vim.tbl_isempty(config) then
-          vim.lsp.config(server, config)
-        end
-      end
-
-      -- After configuring our language servers, we now enable them
-      require('mason-lspconfig').setup {
-        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_enable = true, -- automatically run vim.lsp.enable() for all servers that are installed via Mason
-      }
-
-      -- Manually run vim.lsp.enable for all language servers that are *not* installed via Mason
-      if not vim.tbl_isempty(servers.others) then
-        vim.lsp.enable(vim.tbl_keys(servers.others))
+      for name, server in pairs(servers) do
+        vim.lsp.config(name, server)
+        vim.lsp.enable(name)
       end
     end,
   },
@@ -1040,59 +1013,34 @@ require('lazy').setup {
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
-    branch = 'main',
-    lazy = false, -- Cannot be lazy-loaded on main branch
+    lazy = false,
     build = ':TSUpdate',
+    branch = 'main',
+    -- [[ Configure Treesitter ]] See `:help nvim-treesitter-intro`
     config = function()
-      ---@param buf integer
-      ---@param language string
-      local function treesitter_try_attach(buf, language)
-        -- check if parser exists and load it (pcall suppresses "unsupported language" warnings)
-        local ok = pcall(vim.treesitter.language.add, language)
-        if not ok then
-          return
-        end
-
-        -- enables syntax highlighting and other treesitter features
-        -- wrap in pcall because language.add can succeed even when no parser is available
-        local start_ok = pcall(vim.treesitter.start, buf, language)
-        if not start_ok then
-          return
-        end
-
-        -- enables treesitter based folds
-        -- for more info on folds see `:help folds`
-        -- vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
-
-        -- enables treesitter based indentation
-        vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-      end
-
+      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'regex' }
+      require('nvim-treesitter').install(parsers)
       vim.api.nvim_create_autocmd('FileType', {
         callback = function(args)
           local buf, filetype = args.buf, args.match
 
           local language = vim.treesitter.language.get_lang(filetype)
-          if not language then
-            return
-          end
+          if not language then return end
 
-          local installed_parsers = require('nvim-treesitter').get_installed()
+          -- check if parser exists and load it
+          if not vim.treesitter.language.add(language) then return end
+          -- enables syntax highlighting and other treesitter features
+          vim.treesitter.start(buf, language)
 
-          if vim.tbl_contains(installed_parsers, language) then
-            treesitter_try_attach(buf, language)
-          else
-            -- Only attempt install for languages nvim-treesitter actually supports
-            local available = require('nvim-treesitter').get_available()
-            if vim.tbl_contains(available, language) then
-              require('nvim-treesitter.install').install(language):await(function() treesitter_try_attach(buf, language) end)
-            end
-          end
+          -- enables treesitter based folds
+          -- for more info on folds see `:help folds`
+          -- vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+          -- vim.wo.foldmethod = 'expr'
+
+          -- enables treesitter based indentation
+          vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
         end,
       })
-
-      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'regex' }
-      require('nvim-treesitter.install').install(parsers)
     end,
   },
 
@@ -1108,7 +1056,27 @@ require('lazy').setup {
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   { import = 'custom.plugins' },
-}
+}, { ---@diagnostic disable-line: missing-fields
+  ui = {
+    -- If you are using a Nerd Font: set icons to an empty table which will use the
+    -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table
+    icons = vim.g.have_nerd_font and {} or {
+      cmd = '⌘',
+      config = '🛠',
+      event = '📅',
+      ft = '📂',
+      init = '⚙',
+      keys = '🗝',
+      plugin = '🔌',
+      runtime = '💻',
+      require = '🌙',
+      source = '📄',
+      start = '🚀',
+      task = '📌',
+      lazy = '💤 ',
+    },
+  },
+})
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
