@@ -187,33 +187,7 @@ vim.api.nvim_create_autocmd('BufWritePre', {
   end,
 })
 
--- [[ my custom stuff ]]
--- Restore cursor position on file open
-vim.api.nvim_create_autocmd('BufReadPost', {
-  desc = 'Restore cursor position on file open',
-  group = vim.api.nvim_create_augroup('kickstart-restore-cursor', { clear = true }),
-  pattern = '*',
-  callback = function()
-    local line = vim.fn.line '\'"'
-    if line > 1 and line <= vim.fn.line '$' then
-      vim.cmd 'normal! g\'"'
-    end
-  end,
-})
-
--- auto-create missing dirs when saving a file
-vim.api.nvim_create_autocmd('BufWritePre', {
-  desc = 'Auto-create missing dirs when saving a file',
-  group = vim.api.nvim_create_augroup('kickstart-auto-create-dir', { clear = true }),
-  pattern = '*',
-  callback = function()
-    local dir = vim.fn.expand '<afile>:p:h'
-    if vim.fn.isdirectory(dir) == 0 then
-      vim.fn.mkdir(dir, 'p')
-    end
-  end,
-})
-
+-- [[ Custom Navigation & Selection ]]
 vim.keymap.set('n', '<C-a>', 'ggVG', { desc = 'Select all' })
 
 vim.keymap.set('x', '<S-Up>', 'k', { desc = 'Extend visual selection up' })
@@ -223,12 +197,15 @@ vim.keymap.set('n', '<S-Down>', '<Esc>Vj', { desc = 'Start visual selection and 
 vim.keymap.set('n', '<S-Left>', 'v', { desc = 'Enter visual mode and select left' })
 vim.keymap.set('n', '<S-Right>', 'v', { desc = 'Enter visual mode and select right' })
 
+-- [[ Insert Mode Navigation ]]
 vim.keymap.set('i', '<C-A>', '<HOME>', { desc = 'Jump to first char in line' })
 vim.keymap.set('i', '<C-E>', '<END>', { desc = 'Jump to last char in line' })
 
+-- [[ Split Navigation ]]
 vim.keymap.set('n', '<C-Left>', '<C-w>h', { desc = 'Move to left split' })
 vim.keymap.set('n', '<C-Right>', '<C-w>l', { desc = 'Move to right split' })
 
+-- [[ Copilot Word Navigation ]]
 vim.keymap.set('i', '<M-Left>', '<C-o>b', { desc = 'Jump word left in insert mode' })
 vim.keymap.set('i', '<M-Right>', function()
   local ok, suggestion = pcall(vim.fn['copilot#GetDisplayedSuggestion'])
@@ -239,33 +216,30 @@ vim.keymap.set('i', '<M-Right>', function()
   end
 end, { desc = 'Copilot accept word or jump word right' })
 
+-- [[ Delete Without Yanking ]]
 vim.keymap.set('n', 'dx', '<Cmd>normal "_dd<CR>', { desc = 'Delete line without yanking' })
 vim.keymap.set('v', 'x', '"_d', { desc = 'Delete selection without yanking' })
 
--- close neotree when opening debug
--- vim.keymap.set('n', "<leader>du", function() vim.cmd.Neotree('toggle') require("dapui").toggle({ }) end)
--- vim.keymap.set('n', "<leader>dc", function() vim.cmd.Neotree('toggle')  require("dap").continue() end)
-
+-- [[ Toggle Options ]]
 vim.keymap.set('n', '<leader>tw', function()
   vim.wo.wrap = not vim.wo.wrap
   vim.notify('Wrap: ' .. (vim.wo.wrap and 'enabled' or 'disabled'))
 end, { desc = 'line [w]rap' })
 
--- custom autocmds
+-- [[ Filetype-Specific Configuration ]]
 vim.api.nvim_create_autocmd('FileType', {
   pattern = { 'helm' },
   callback = function()
-    -- Force YAML-like spaces
+    -- Helm charts use strict YAML with 2-space indents
     vim.bo.expandtab = true
     vim.bo.shiftwidth = 2
     vim.bo.softtabstop = 2
     vim.bo.tabstop = 2
-    -- If indentexpr is doing weird stuff, clear it
     vim.bo.indentexpr = ''
   end,
 })
 
--- scooter snacks integration
+-- [[ Scooter Search Integration ]]
 local scooter_term = nil
 
 -- Called by scooter to open the selected file at the correct line from the scooter search list

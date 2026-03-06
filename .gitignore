@@ -14,3 +14,7 @@ lazy-lock.json
 
 # yaml-schema-router binary (managed by update-yaml-schema-router.sh)
 yaml-schema-router
+
+_bmad*
+.github
+.windsurf
