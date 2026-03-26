@@ -142,10 +142,12 @@ vim.keymap.set('n', '<leader>Q', ':bd<CR>', { desc = 'Close current buffer' })
 --  Use CTRL+<hjkl> to switch between windows
 --
 --  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+if not vim.g.vscode then
+  vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+  vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+  vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+  vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+end
 
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
 -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
@@ -298,10 +300,10 @@ end, { desc = 'search and [R]eplace selected text' })
 -- vscode specific commands
 if vim.g.vscode then
   vim.keymap.set('n', '<leader>o', function() vim.fn.VSCodeNotify 'workbench.view.explorer' end, { desc = '[o]pen file explorer' })
-  vim.keymap.set('n', '<leader>gg', function()
-    -- Call the LazyGit toggle command from the extension
-    vim.fn.VSCodeNotify 'lazygit-vscode.toggle'
-  end, { desc = 'Toggle LazyGit (VSCode extension)' })
+  vim.keymap.set('n', '<leader>ac', function() vim.fn.VSCodeNotify 'windsurf.prioritized.chat.open' end, { desc = '[a]i [c]ascade chat' })
+  vim.keymap.set('n', '<leader>bd', function() vim.fn.VSCodeNotify 'workbench.action.closeActiveEditor' end, { desc = '[b]uffer [d]elete editor' })
+  vim.keymap.set('n', '<leader>/', function() vim.fn.VSCodeNotify 'workbench.action.findInFiles' end, { desc = 'search in files' })
+  vim.keymap.set('n', '<leader>gg', function() vim.fn.VSCodeNotify 'workbench.view.scm' end, { desc = '[g]it tab' })
 end
 
 -- [[ Install `lazy.nvim` plugin manager ]]
@@ -385,6 +387,7 @@ require('lazy').setup({
 
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
+    enabled = not vim.g.vscode,
     event = 'VimEnter',
     ---@module 'which-key'
     ---@type wk.Opts
@@ -458,6 +461,7 @@ require('lazy').setup({
     -- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
     -- used for completion, annotations and signatures of Neovim apis
     'folke/lazydev.nvim',
+    enabled = not vim.g.vscode,
     ft = 'lua',
     ---@module 'lazydev'
     ---@type lazydev.Config
@@ -472,6 +476,7 @@ require('lazy').setup({
   {
     -- Main LSP Configuration
     'neovim/nvim-lspconfig',
+    enabled = not vim.g.vscode,
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
       -- Mason must be loaded before its dependents so we need to set it up here.
@@ -732,6 +737,7 @@ require('lazy').setup({
 
   { -- Autoformat
     'stevearc/conform.nvim',
+    enabled = not vim.g.vscode,
     event = { 'BufWritePre' },
     cmd = { 'ConformInfo' },
     keys = {
@@ -958,37 +964,57 @@ require('lazy').setup({
       --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
       --  - ci'  - [C]hange [I]nside [']quote
       require('mini.ai').setup { n_lines = 500 }
-      require('mini.base16').setup {
-        palette = {
-          base00 = '#16181a',
-          base01 = '#1e2124',
-          base02 = '#3c4048',
-          base03 = '#7b8496',
-          base04 = '#7b8496',
-          base05 = '#ffffff',
-          base06 = '#16181a',
-          base07 = '#ffffff',
-          base08 = '#ff6e5e',
-          base09 = '#ffbd5e',
-          base0A = '#f1ff5e',
-          base0B = '#5eff6c',
-          base0C = '#5ef1ff',
-          base0D = '#5ea1ff',
-          base0E = '#bd5eff',
-          base0F = '#ff5ef1',
-        },
-        use_cterm = true,
-        plugins = {
-          default = false,
-          ['echasnovski/mini.nvim'] = true,
-        },
-      }
 
-      require('mini.icons').setup()
-      require('mini.diff').setup {
-        source = require('mini.diff').gen_source.none(),
-      }
-      require('mini.tabline').setup()
+      -- VSCode has its own UI, so only load these in regular Neovim
+      if not vim.g.vscode then
+        require('mini.base16').setup {
+          palette = {
+            base00 = '#16181a',
+            base01 = '#1e2124',
+            base02 = '#3c4048',
+            base03 = '#7b8496',
+            base04 = '#7b8496',
+            base05 = '#ffffff',
+            base06 = '#16181a',
+            base07 = '#ffffff',
+            base08 = '#ff6e5e',
+            base09 = '#ffbd5e',
+            base0A = '#f1ff5e',
+            base0B = '#5eff6c',
+            base0C = '#5ef1ff',
+            base0D = '#5ea1ff',
+            base0E = '#bd5eff',
+            base0F = '#ff5ef1',
+          },
+          use_cterm = true,
+          plugins = {
+            default = false,
+            ['echasnovski/mini.nvim'] = true,
+          },
+        }
+
+        require('mini.icons').setup()
+        require('mini.diff').setup {
+          source = require('mini.diff').gen_source.none(),
+        }
+        require('mini.tabline').setup()
+
+        -- Simple and easy statusline.
+        --  You could remove this setup call if you don't like it,
+        --  and try some other statusline plugin
+        local statusline = require 'mini.statusline'
+        -- set use_icons to true if you have a Nerd Font
+        statusline.setup { use_icons = vim.g.have_nerd_font }
+
+        -- You can configure sections in the statusline by overriding their
+        -- default behavior. For example, here we set the section for
+        -- cursor location to LINE:COLUMN
+        ---@diagnostic disable-next-line: duplicate-set-field
+        statusline.section_location = function() return '%2l:%-2v' end
+
+        require('mini.bufremove').setup()
+        vim.keymap.set('n', '<leader>bd', function() require('mini.bufremove').delete(0, false) end, { desc = '[d]elete' })
+      end
 
       require('mini.pairs').setup()
       require('mini.indentscope').setup {
@@ -1013,21 +1039,6 @@ require('lazy').setup({
         },
       }
 
-      -- Simple and easy statusline.
-      --  You could remove this setup call if you don't like it,
-      --  and try some other statusline plugin
-      local statusline = require 'mini.statusline'
-      -- set use_icons to true if you have a Nerd Font
-      statusline.setup { use_icons = vim.g.have_nerd_font }
-
-      -- You can configure sections in the statusline by overriding their
-      -- default behavior. For example, here we set the section for
-      -- cursor location to LINE:COLUMN
-      ---@diagnostic disable-next-line: duplicate-set-field
-      statusline.section_location = function() return '%2l:%-2v' end
-
-      require('mini.bufremove').setup()
-
       require('mini.move').setup {
         -- Options which control moving behavior
         options = {
@@ -1036,7 +1047,6 @@ require('lazy').setup({
         },
       }
 
-      vim.keymap.set('n', '<leader>bd', function() require('mini.bufremove').delete(0, false) end, { desc = '[d]elete' })
       -- ... and there is more!
       --  Check out: https://github.com/nvim-mini/mini.nvim
     end,
@@ -1044,6 +1054,7 @@ require('lazy').setup({
 
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    enabled = not vim.g.vscode,
     lazy = false,
     build = ':TSUpdate',
     branch = 'main',
