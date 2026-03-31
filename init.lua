@@ -228,6 +228,8 @@ vim.keymap.set('n', '<leader>tw', function()
   vim.notify('Wrap: ' .. (vim.wo.wrap and 'enabled' or 'disabled'))
 end, { desc = 'line [w]rap' })
 
+require 'custom.yaml_nav'
+
 -- [[ Filetype-Specific Configuration ]]
 vim.api.nvim_create_autocmd('FileType', {
   pattern = { 'helm' },
@@ -303,7 +305,7 @@ if vim.g.vscode then
   vim.keymap.set('n', '<leader>ac', function() vim.fn.VSCodeNotify 'windsurf.prioritized.chat.open' end, { desc = '[a]i [c]ascade chat' })
   vim.keymap.set('n', '<leader>bd', function() vim.fn.VSCodeNotify 'workbench.action.closeActiveEditor' end, { desc = '[b]uffer [d]elete editor' })
   vim.keymap.set('n', '<leader>/', function() vim.fn.VSCodeNotify 'workbench.action.findInFiles' end, { desc = 'search in files' })
-  vim.keymap.set('n', '<leader>gg', function() vim.fn.VSCodeNotify 'workbench.view.scm' end, { desc = '[g]it tab' })
+  vim.keymap.set('n', '<leader>gg', function() vim.fn.VSCodeNotify('workbench.action.tasks.runTask', 'close_lazygit') end, { desc = '[g]it lazygit' })
 end
 
 -- [[ Install `lazy.nvim` plugin manager ]]
