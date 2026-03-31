@@ -32,7 +32,7 @@ return {
         tools = {
           copilot = {
             -- cmd = { 'copilot', '--model', 'claude-opus-4.6', '--alt-screen', 'on' },
-            cmd = { 'copilot', '--alt-screen', 'on' },
+            cmd = { 'copilot' },
           },
         },
       },
