@@ -34,11 +34,14 @@ local function yaml_percent()
     n = n:parent()
   end
 
-  -- Not on a key line: find the outermost pair ending on this row -> jump to its key
+  -- Not on a key line: find the innermost pair ending on this row -> jump to its key
   local target_pair = nil
   n = node
   while n do
-    if n:type() == 'block_mapping_pair' and node_end_row(n) == row then target_pair = n end
+    if n:type() == 'block_mapping_pair' and node_end_row(n) == row then
+      target_pair = n
+      break
+    end
     n = n:parent()
   end
 
@@ -61,7 +64,7 @@ local function yaml_percent()
 end
 
 vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'yaml' },
+  pattern = { 'yaml', 'helm' },
   callback = function(event)
     vim.keymap.set({ 'n', 'x' }, '%', yaml_percent, { buffer = event.buf })
   end,
