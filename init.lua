@@ -305,7 +305,24 @@ if vim.g.vscode then
   vim.keymap.set('n', '<leader>ac', function() vim.fn.VSCodeNotify 'windsurf.prioritized.chat.open' end, { desc = '[a]i [c]ascade chat' })
   vim.keymap.set('n', '<leader>bd', function() vim.fn.VSCodeNotify 'workbench.action.closeActiveEditor' end, { desc = '[b]uffer [d]elete editor' })
   vim.keymap.set('n', '<leader>/', function() vim.fn.VSCodeNotify 'workbench.action.findInFiles' end, { desc = 'search in files' })
-  vim.keymap.set('n', '<leader>gg', function() vim.fn.VSCodeNotify('workbench.action.tasks.runTask', 'close_lazygit') end, { desc = '[g]it lazygit' })
+  -- Launch lazygit in a new Alacritty window, bypassing Windsurf's task
+  -- system (which adds 1-2s of task-provider overhead). Each `alacritty`
+  -- CLI invocation is its own independent OS process, so exiting lazygit
+  -- only closes this window.
+  vim.keymap.set('n', '<leader>gg', function()
+    vim.fn.jobstart({
+      '/opt/homebrew/bin/alacritty',
+      '--title', 'lazygit',
+      '--working-directory', vim.fn.getcwd(),
+      '-e', 'lazygit',
+    }, { detach = true })
+    -- After Alacritty materialises it auto-focuses (yabai bsp). Zoom the
+    -- focused window via yabai so it fills the current Space instead of
+    -- macOS native fullscreen.
+    vim.defer_fn(function()
+      vim.fn.jobstart({ '/opt/homebrew/bin/yabai', '-m', 'window', '--toggle', 'zoom-fullscreen' }, { detach = true })
+    end, 250)
+  end, { desc = '[g]it lazygit (Alacritty)' })
 end
 
 -- [[ Install `lazy.nvim` plugin manager ]]
@@ -496,6 +513,9 @@ require('lazy').setup({
 
       -- Useful status updates for LSP.
       { 'j-hui/fidget.nvim', opts = {} },
+
+      -- Allows extra capabilities provided by blink.cmp
+      'saghen/blink.cmp',
     },
     config = function()
       -- Brief aside: **What is LSP?**
@@ -643,33 +663,39 @@ require('lazy').setup({
 
           stylua = {}, -- Used to format Lua code
 
-          lua_ls = {
-            on_init = function(client)
-              if client.workspace_folders then
-                local path = client.workspace_folders[1].name
-                if path ~= vim.fn.stdpath 'config' and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc')) then return end
-              end
+        -- Special Lua Config, as recommended by neovim help docs
+        lua_ls = {
+          on_init = function(client)
+            client.server_capabilities.documentFormattingProvider = false -- Disable formatting (formatting is done by stylua)
 
-              client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
-                runtime = {
-                  version = 'LuaJIT',
-                  path = { 'lua/?.lua', 'lua/?/init.lua' },
-                },
-                workspace = {
-                  checkThirdParty = false,
-                  -- NOTE: this is a lot slower and will cause issues when working on your own configuration.
-                  --  See https://github.com/neovim/nvim-lspconfig/issues/3189
-                  library = vim.tbl_extend('force', vim.api.nvim_get_runtime_file('', true), {
-                    '${3rd}/luv/library',
-                    '${3rd}/busted/library',
-                  }),
-                },
-              })
-            end,
-            settings = {
-              Lua = {},
+            if client.workspace_folders then
+              local path = client.workspace_folders[1].name
+              if path ~= vim.fn.stdpath 'config' and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc')) then return end
+            end
+
+            client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
+              runtime = {
+                version = 'LuaJIT',
+                path = { 'lua/?.lua', 'lua/?/init.lua' },
+              },
+              workspace = {
+                checkThirdParty = false,
+                -- NOTE: this is a lot slower and will cause issues when working on your own configuration.
+                --  See https://github.com/neovim/nvim-lspconfig/issues/3189
+                library = vim.tbl_extend('force', vim.api.nvim_get_runtime_file('', true), {
+                  '${3rd}/luv/library',
+                  '${3rd}/busted/library',
+                }),
+              },
+            })
+          end,
+          ---@type lspconfig.settings.lua_ls
+          settings = {
+            Lua = {
+              format = { enable = false }, -- Disable formatting (formatting is done by stylua)
             },
           },
+        },
         },
         -- This table contains config for all language servers that are *not* installed via Mason.
         -- Structure is identical to the mason table from above.
@@ -742,7 +768,7 @@ require('lazy').setup({
     keys = {
       {
         '<leader>f',
-        function() require('conform').format { async = true, lsp_format = 'fallback' } end,
+        function() require('conform').format { async = true } end,
         mode = '',
         desc = '[F]ormat buffer',
       },
@@ -757,20 +783,21 @@ require('lazy').setup({
         -- languages here or re-enable it for the disabled ones.
         local disable_filetypes = setmetatable({}, {
           __index = function()
-            return true -- returns tru for all filetypes and effectively disables autoformat
+            return true -- returns true for all filetypes and effectively disables autoformat
           end,
         })
         if disable_filetypes[vim.bo[bufnr].filetype] then
           return nil
         else
-          return {
-            timeout_ms = 500,
-            lsp_format = 'fallback',
-          }
+          return nil
         end
       end,
+      default_format_opts = {
+        lsp_format = 'fallback', -- Use external formatters if configured below, otherwise use LSP formatting. Set to `false` to disable LSP formatting entirely.
+      },
+      -- You can also specify external formatters in here.
       formatters_by_ft = {
-        lua = { 'stylua' },
+        -- rust = { 'rustfmt' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -960,9 +987,16 @@ require('lazy').setup({
       --
       -- Examples:
       --  - va)  - [V]isually select [A]round [)]paren
-      --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
+      --  - yinq - [Y]ank [I]nside [I]next [Q]uote
       --  - ci'  - [C]hange [I]nside [']quote
-      require('mini.ai').setup { n_lines = 500 }
+      require('mini.ai').setup {
+        -- NOTE: Avoid conflicts with the built-in incremental selection mappings on Neovim>=0.12 (see `:help treesitter-incremental-selection`)
+        mappings = {
+          around_next = 'aa',
+          inside_next = 'ii',
+        },
+        n_lines = 500,
+      }
 
       -- VSCode has its own UI, so only load these in regular Neovim
       if not vim.g.vscode then
@@ -1059,8 +1093,32 @@ require('lazy').setup({
     branch = 'main',
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter-intro`
     config = function()
+      -- ensure basic parser are installed
       local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'regex' }
       require('nvim-treesitter').install(parsers)
+
+      ---@param buf integer
+      ---@param language string
+      local function treesitter_try_attach(buf, language)
+        -- check if parser exists and load it
+        if not vim.treesitter.language.add(language) then return end
+        -- enables syntax highlighting and other treesitter features
+        vim.treesitter.start(buf, language)
+
+        -- enables treesitter based folds
+        -- for more info on folds see `:help folds`
+        -- vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+        -- vim.wo.foldmethod = 'expr'
+
+        -- check if treesitter indentation is available for this language, and if so enable it
+        -- in case there is no indent query, the indentexpr will fallback to the vim's built in one
+        local has_indent_query = vim.treesitter.query.get(language, 'indents') ~= nil
+
+        -- enables treesitter based indentation
+        if has_indent_query then vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()" end
+      end
+
+      local available_parsers = require('nvim-treesitter').get_available()
       vim.api.nvim_create_autocmd('FileType', {
         callback = function(args)
           local buf, filetype = args.buf, args.match
@@ -1068,18 +1126,18 @@ require('lazy').setup({
           local language = vim.treesitter.language.get_lang(filetype)
           if not language then return end
 
-          -- check if parser exists and load it
-          if not vim.treesitter.language.add(language) then return end
-          -- enables syntax highlighting and other treesitter features
-          vim.treesitter.start(buf, language)
+          local installed_parsers = require('nvim-treesitter').get_installed 'parsers'
 
-          -- enables treesitter based folds
-          -- for more info on folds see `:help folds`
-          -- vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
-          -- vim.wo.foldmethod = 'expr'
-
-          -- enables treesitter based indentation
-          vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          if vim.tbl_contains(installed_parsers, language) then
+            -- enable the parser if it is installed
+            treesitter_try_attach(buf, language)
+          elseif vim.tbl_contains(available_parsers, language) then
+            -- if a parser is available in `nvim-treesitter` auto install it, and enable it after the installation is done
+            require('nvim-treesitter').install(language):await(function() treesitter_try_attach(buf, language) end)
+          else
+            -- try to enable treesitter features in case the parser exists but is not available from `nvim-treesitter`
+            treesitter_try_attach(buf, language)
+          end
         end,
       })
     end,
