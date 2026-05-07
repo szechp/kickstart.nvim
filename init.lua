@@ -33,6 +33,7 @@ do
   vim.o.laststatus = 3
   vim.o.wrap = false
   vim.o.cmdheight = 0
+  vim.o.termguicolors = true
 
   -- [[ Diagnostic config ]]
   vim.diagnostic.config {
@@ -154,7 +155,7 @@ do
         if orig_cfg == nil then orig_cfg = vim.api.nvim_win_get_config(win) end
         local t = vim.fn.getcmdtype()
         if t == '/' or t == '?' then return end
-        local width = math.floor(vim.o.columns * 0.6)
+        local width = math.floor(vim.o.columns * 0.4)
         local col = math.floor((vim.o.columns - width) / 2)
         local row = math.floor(vim.o.lines * 0.3)
         pcall(vim.api.nvim_win_set_config, win, { relative = 'editor', row = row, col = col, width = width, border = 'rounded' })
