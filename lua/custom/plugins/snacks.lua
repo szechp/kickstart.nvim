@@ -27,6 +27,7 @@ return {
   -- See `:help snacks-picker` and `:help snacks-picker-setup`
   ---@type snacks.Config
   opts = {
+    notifier = {},
     lazygit = {},
     statuscolumn = { enabled = false },
     gitbrowse = {},
@@ -103,6 +104,8 @@ return {
 
   -- See `:help snacks-pickers-sources`
   keys = {
+    -- notifications
+    { '<leader>snd', function() Snacks.notifier.hide() end, desc = '[d]ismiss notifications' },
     -- gitbrowse
     { '<leader>gw', function() Snacks.gitbrowse.open() end, desc = 'open in [w]eb browser' },
     -- snacks picker keymaps to replace telescope

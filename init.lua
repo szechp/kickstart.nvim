@@ -83,6 +83,7 @@ vim.o.laststatus = 3
 
 -- Disable line wrapping
 vim.o.wrap = false
+vim.o.cmdheight = 0
 
 -- Highlight max chars per line
 -- vim.o.colorcolumn = '120'
@@ -242,6 +243,43 @@ vim.api.nvim_create_autocmd('FileType', {
     vim.bo.indentexpr = ''
   end,
 })
+
+-- [[ vim.ui2: centered floating cmdline ]]
+vim.schedule(function()
+  local ok, ui2 = pcall(require, 'vim._core.ui2')
+  if not ok then return end
+  ui2.enable()
+
+  local orig_cfg = nil
+  local grp = vim.api.nvim_create_augroup('ui2-centered-cmdline', { clear = true })
+
+  vim.api.nvim_create_autocmd('CmdlineEnter', {
+    group = grp,
+    callback = function()
+      local win = ui2.wins and ui2.wins.cmd
+      if not (win and vim.api.nvim_win_is_valid(win)) then return end
+      if orig_cfg == nil then orig_cfg = vim.api.nvim_win_get_config(win) end
+      local t = vim.fn.getcmdtype()
+      if t == '/' or t == '?' then return end
+      local width = math.floor(vim.o.columns * 0.6)
+      local col = math.floor((vim.o.columns - width) / 2)
+      local row = math.floor(vim.o.lines * 0.3)
+      pcall(vim.api.nvim_win_set_config, win, { relative = 'editor', row = row, col = col, width = width, border = 'rounded' })
+      -- blink.cmp expects (1-indexed row, 0-indexed col) pointing at the content row (skip top border)
+      vim.g.ui_cmdline_pos = { row + 2, col + 1 }
+    end,
+  })
+
+  vim.api.nvim_create_autocmd('CmdlineLeave', {
+    group = grp,
+    callback = function()
+      if orig_cfg == nil then return end
+      local win = ui2.wins and ui2.wins.cmd
+      if win and vim.api.nvim_win_is_valid(win) then pcall(vim.api.nvim_win_set_config, win, orig_cfg) end
+      orig_cfg = nil
+    end,
+  })
+end)
 
 -- [[ Scooter Search Integration ]]
 local scooter_term = nil
