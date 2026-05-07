@@ -1,20 +1,11 @@
--- Makes folding look modern and keep high performance
---- @module 'lazy'
---- @type LazySpec
-return {
-  'chrisgrieser/nvim-origami',
-  event = 'VeryLazy',
-  enabled = not vim.g.vscode,
-  ---@module 'origami'
-  ---@type Origami.config
-  opts = {
-    foldKeymaps = { setup = false },
-    autoFold = { enabled = true, kinds = { 'imports' } },
-  },
+if vim.g.vscode then return end
 
-  -- recommended: disable vim's auto-folding
-  init = function()
-    vim.opt.foldlevel = 99
-    vim.opt.foldlevelstart = 99
-  end,
+vim.opt.foldlevel = 99
+vim.opt.foldlevelstart = 99
+
+vim.pack.add { 'https://github.com/chrisgrieser/nvim-origami' }
+
+require('origami').setup {
+  foldKeymaps = { setup = false },
+  autoFold = { enabled = true, kinds = { 'imports' } },
 }

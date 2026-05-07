@@ -1,7 +1,4 @@
-return {
-  'catgoose/nvim-colorizer.lua',
-  enabled = not vim.g.vscode,
-  event = 'BufReadPre',
-  opts = { -- set to setup table
-  },
-}
+if vim.g.vscode then return end
+
+vim.pack.add { 'https://github.com/catgoose/nvim-colorizer.lua' }
+require('colorizer').setup {}
