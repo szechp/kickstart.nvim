@@ -554,7 +554,7 @@ do
     cmdline = {
       completion = {
         list = { selection = { preselect = false } },
-        menu = { auto_show = true },
+        menu = { auto_show = true, draw = { columns = { { 'label' } } } },
       },
       keymap = {
         preset = 'default',
