@@ -41,8 +41,8 @@ do
     severity_sort = true,
     float = { border = 'rounded', source = 'if_many' },
     underline = { severity = { min = vim.diagnostic.severity.WARN } },
-    virtual_text = true,
-    virtual_lines = false,
+    virtual_text = false,
+    virtual_lines = { current_line = true },
     signs = vim.g.have_nerd_font and {
       text = {
         [vim.diagnostic.severity.ERROR] = '󰅚 ',
