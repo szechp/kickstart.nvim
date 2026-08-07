@@ -482,6 +482,9 @@ do
         cmd = { 'tofu-ls', 'serve' },
         filetypes = { 'terraform', 'terraform-vars' },
         root_markers = { '.terraform', '.git' },
+        -- tofu-ls emits uint32-wrapped negative delta values in semantic tokens
+        -- (e.g. 4294967244 = -52), which crashes nvim's semantic token handler.
+        on_init = function(client) client.server_capabilities.semanticTokensProvider = nil end,
       },
       copilot = {},
     },
