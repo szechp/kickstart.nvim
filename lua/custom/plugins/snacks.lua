@@ -71,7 +71,7 @@ vim.keymap.set('n', '<leader>sp', function() Snacks.picker.resume() end, { desc 
 vim.keymap.set('n', '<leader>sr', function() Snacks.picker.recent() end, { desc = '[r]ecent Files' })
 vim.keymap.set('n', '<leader><leader>', function() Snacks.picker.smart() end, { desc = '[ ] smart picker' })
 vim.keymap.set('n', '<leader>sg', function() Snacks.picker.grep_buffers() end, { desc = '[g]rep in Open Files' })
-vim.keymap.set('n', '<leader>sN', function() Snacks.picker.files { cwd = vim.fn.stdpath 'config' } end, { desc = '[N]eovim files' })
+vim.keymap.set('n', '<leader>sN', function() Snacks.picker.files { cwd = vim.fn.stdpath 'config', follow = true } end, { desc = '[N]eovim files' })
 
 -- git
 vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = 'lazy[g]it' })
