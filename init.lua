@@ -457,7 +457,7 @@ do
             runtime = { version = 'LuaJIT', path = { 'lua/?.lua', 'lua/?/init.lua' } },
             workspace = {
               checkThirdParty = false,
-              library = vim.tbl_extend('force', vim.api.nvim_get_runtime_file('', true), {
+              library = vim.list_extend(vim.api.nvim_get_runtime_file('', true), {
                 '${3rd}/luv/library',
                 '${3rd}/busted/library',
               }),
