@@ -79,4 +79,4 @@ LSP keymaps live in the `LspAttach` autocommand in `init.lua` (around line 550).
 
 ### VSCode compatibility
 
-When `vim.g.vscode` is set, most UI plugins are skipped and a small set of VSCode-specific keymaps is loaded (lazygit via Alacritty + yabai). Guard any new plugin with `cond = not vim.g.vscode` if it is UI-only.
+When `vim.g.vscode` is set, most UI plugins are skipped and a small set of VSCode-specific keymaps is loaded (lazygit via kitty + yabai). Guard any new plugin with `cond = not vim.g.vscode` if it is UI-only.

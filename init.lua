@@ -222,15 +222,15 @@ do
     vim.keymap.set('n', '<leader>/', function() vim.fn.VSCodeNotify 'workbench.action.findInFiles' end, { desc = 'search in files' })
     vim.keymap.set('n', '<leader>gg', function()
       vim.fn.jobstart({
-        '/opt/homebrew/bin/alacritty',
+        '/opt/homebrew/bin/kitty',
         '--title', 'lazygit',
-        '--working-directory', vim.fn.getcwd(),
-        '-e', 'lazygit',
+        '--directory', vim.fn.getcwd(),
+        'lazygit',
       }, { detach = true })
       vim.defer_fn(function()
         vim.fn.jobstart({ '/opt/homebrew/bin/yabai', '-m', 'window', '--toggle', 'zoom-fullscreen' }, { detach = true })
       end, 250)
-    end, { desc = '[g]it lazygit (Alacritty)' })
+    end, { desc = '[g]it lazygit (kitty)' })
   end
 end
 
