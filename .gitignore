@@ -17,5 +17,6 @@ nvim-pack-lock.json
 yaml-schema-router
 
 _bmad
+.agents
 .github
 .windsurf
